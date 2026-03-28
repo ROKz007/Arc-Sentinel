@@ -1,4 +1,4 @@
-export type SeverityLevel = "yellow" | "orange" | "critical";
+export type SeverityLevel = "yellow" | "orange" | "red" | "critical";
 
 export interface SensorLog {
   id: number;

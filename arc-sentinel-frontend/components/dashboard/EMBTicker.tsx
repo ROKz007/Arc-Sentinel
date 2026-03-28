@@ -5,6 +5,7 @@ import { Anomaly } from "@/lib/types";
 const SEVERITY_ICON: Record<string, string> = {
   yellow: "[Y]",
   orange: "[O]",
+  red: "[R]",
   critical: "[C]",
 };
 

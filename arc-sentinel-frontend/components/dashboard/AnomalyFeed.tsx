@@ -6,6 +6,7 @@ import { formatDistanceToNow } from "date-fns";
 const SEVERITY_STYLE: Record<string, string> = {
   yellow: "border-yellow-500 bg-yellow-500/10 text-yellow-300",
   orange: "border-orange-500 bg-orange-500/10 text-orange-300",
+  red: "border-red-500 bg-red-500/10 text-red-300",
   critical: "border-red-500 bg-red-500/10 text-red-300 animate-pulse",
 };
 
