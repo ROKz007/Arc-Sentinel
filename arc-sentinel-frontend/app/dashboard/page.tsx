@@ -1,6 +1,35 @@
 import { HudTwinViewport } from "@/components/twin/HudTwinViewport";
+import { fetchAnomalies, fetchIHI } from '@/lib/api';
 
-export default function DashboardPage() {
+export const revalidate = 0;
+
+export default async function DashboardPage() {
+  // Fetch with fallbacks — never let a failed fetch crash the whole page
+  const [ihiResult, anomaliesResult] = await Promise.allSettled([
+    fetchIHI(),
+    fetchAnomalies({ limit: 50 }),
+  ]);
+
+  const ihi = ihiResult.status === 'fulfilled' ? ihiResult.value : { score: 0, breakdown: {} };
+  const anomalies = anomaliesResult.status === 'fulfilled' ? anomaliesResult.value : [];
+
+  // Log failures clearly for debugging
+  if (ihiResult.status === 'rejected') {
+    // eslint-disable-next-line no-console
+    console.error('[DashboardPage] IHI fetch failed:', ihiResult.reason);
+  }
+  if (anomaliesResult.status === 'rejected') {
+    // eslint-disable-next-line no-console
+    console.error('[DashboardPage] Anomalies fetch failed:', anomaliesResult.reason);
+  }
+
+  // Helper: count unresolved anomalies
+  const unresolvedCount = anomalies.filter((a: any) => !a.resolved).length;
+  // Helper: build ticker string from anomalies
+  const tickerText = anomalies.length
+    ? anomalies.map((a: any) => `${a.node_id || 'NODE'}: ${a.type || 'ANOMALY'} @ ${a.created_at || ''}`).join(' // ')
+    : 'No anomalies detected.';
+
   return (
     <div className="text-on-surface font-body selection:bg-primary/30 selection:text-primary overflow-hidden min-h-screen flex flex-col">
       <div className="fixed inset-0 neural-mesh pointer-events-none animate-mesh z-0" />
@@ -11,7 +40,7 @@ export default function DashboardPage() {
           <span className="font-mono text-xs font-bold text-hazard-red animate-pulse uppercase tracking-widest whitespace-nowrap">CRITICAL TELEMETRY STREAM // HAZARD DETECTED</span>
           <div className="flex-1 overflow-hidden whitespace-nowrap relative">
             <span className="inline-block font-mono text-[11px] text-on-surface/90 uppercase tracking-[0.2em] animate-ticker">
-              BRIDGE SPAN 4: STRESS RATIO 0.0024 // WIND SPEED 12KT // VERTICAL DISPLACEMENT 2mm // AI ANALYSIS: OPTIMAL STRUCTURAL INTEGRITY // SENSOR NODE 88-X STATUS: ACTIVE // NEXT SCAN IN 04:59s // ANOMALY COUNT: 004 // HAZARD LEVEL: ELEVATED //
+              {tickerText}
             </span>
           </div>
         </div>
@@ -89,7 +118,7 @@ export default function DashboardPage() {
                   <div className="absolute inset-4 rounded-full border border-secondary/20 animate-[spin_8s_linear_infinite_reverse]" />
                   <div className="absolute inset-0 rounded-full border border-primary/20 backdrop-blur-sm" />
                   <div className="relative z-10 flex flex-col items-center justify-center">
-                    <span className="font-mono text-7xl font-bold text-glow-primary group-hover:text-glow-secondary group-hover:text-secondary transition-all">98.4</span>
+                    <span className="font-mono text-7xl font-bold text-glow-primary group-hover:text-glow-secondary group-hover:text-secondary transition-all">{ihi.score?.toFixed ? ihi.score.toFixed(1) : '0.0'}</span>
                     <span className="font-mono text-[12px] opacity-70 tracking-widest mt-2 uppercase">STABLE_PULSE</span>
                   </div>
                 </div>
@@ -133,7 +162,7 @@ export default function DashboardPage() {
                 <span className="material-symbols-outlined text-secondary animate-pulse" aria-hidden>warning</span>
                 <span className="font-mono text-[9px] px-2 py-1 bg-secondary/20 text-secondary rounded uppercase">CRITICAL_SCAN</span>
               </div>
-              <p className="font-mono text-3xl font-bold text-secondary text-glow-secondary mb-1">004</p>
+              <p className="font-mono text-3xl font-bold text-secondary text-glow-secondary mb-1">{unresolvedCount.toString().padStart(3, '0')}</p>
               <p className="font-headline text-[10px] tracking-widest opacity-60 uppercase">ACTIVE_ANOMALIES</p>
               <p className="font-mono text-[10px] mt-6 text-secondary/80 uppercase leading-tight">Thermal deviation detected: Segment 42B-Delta</p>
             </div>
@@ -148,8 +177,9 @@ export default function DashboardPage() {
                 <span className="font-mono text-[9px] px-3 py-1 border border-primary/30 text-primary uppercase">PREDICTIVE_ENGINE_V4.2</span>
               </div>
               <div className="flex-1 mb-6">
+                {/* TODO: Replace with real Argus AI response if available */}
                 <p className="font-mono text-[13px] leading-relaxed text-on-surface/80 cursor-blink inline">
-                  &gt; Structural fatigue simulation predicts a 0.05% increase in stress at Pylon A between 0200h-0500h due to forecasted tidal currents. Recommended maintenance: No immediate action, continue observation. Cross-referencing with historical telemetry 08-B...
+                  &gt; Argus AI: Connect and send a message to see live insights.
                 </p>
               </div>
               <div className="flex gap-4">
