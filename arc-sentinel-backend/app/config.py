@@ -8,7 +8,7 @@ class Settings(BaseSettings):
     supabase_url: str
     supabase_service_key: str
     openai_api_key: str | None = None
-    cors_origins: str = "http://localhost:3000"
+    cors_origins: str = "https://arc-sentinel-qjg5.onrender.com"
     app_env: str = "development"
 
 
