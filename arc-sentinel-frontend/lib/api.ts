@@ -1,6 +1,4 @@
 
-const BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
-
 function fetchWithTimeout(url: string, options: RequestInit = {}, timeoutMs = 10000): Promise<Response> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
@@ -9,7 +7,7 @@ function fetchWithTimeout(url: string, options: RequestInit = {}, timeoutMs = 10
 }
 
 export async function fetchIHI() {
-  const res = await fetchWithTimeout(`${BASE}/ihi`, { cache: 'no-store' }, 8000);
+  const res = await fetchWithTimeout('/api/ihi', { cache: 'no-store' }, 8000);
   if (!res.ok) throw new Error(`IHI fetch failed: ${res.status}`);
   return res.json();
 }
@@ -18,14 +16,14 @@ export async function fetchAnomalies(params?: { severity?: string; limit?: numbe
   const q = new URLSearchParams(
     Object.fromEntries(Object.entries(params ?? {}).filter(([_, v]) => v !== undefined).map(([k, v]) => [k, String(v)]))
   ).toString();
-  const res = await fetchWithTimeout(`${BASE}/anomalies?${q}`, { cache: 'no-store' }, 8000);
+  const res = await fetchWithTimeout(`/api/anomalies${q ? `?${q}` : ''}`, { cache: 'no-store' }, 8000);
   if (!res.ok) throw new Error(`Anomalies fetch failed: ${res.status}`);
   return res.json();
 }
 
 export async function fetchSensorHistory(node_id: string, limit = 50) {
   const res = await fetchWithTimeout(
-    `${BASE}/latest?node_id=${node_id}&limit=${limit}`,
+    `/api/latest?node_id=${node_id}&limit=${limit}`,
     { cache: 'no-store' },
     8000
   );
@@ -35,14 +33,14 @@ export async function fetchSensorHistory(node_id: string, limit = 50) {
 
 export async function sendArgusMessage(message: string): Promise<{ reply: string; sources: string[] }> {
   const res = await fetchWithTimeout(
-    `${BASE}/argus/chat`,
+    '/api/argus/chat',
     {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ message }),
       cache: 'no-store',
     },
-    30000  // Argus needs more time — LLM call can take up to 30s
+    30000
   );
   if (!res.ok) {
     const text = await res.text().catch(() => 'no body');
@@ -53,7 +51,8 @@ export async function sendArgusMessage(message: string): Promise<{ reply: string
 
 export async function pingBackend(): Promise<boolean> {
   try {
-    const res = await fetchWithTimeout(`${BASE}/`, { cache: 'no-store' }, 5000);
+    const BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:8000';
+    const res = await fetchWithTimeout(`${BASE}/ping`, { cache: 'no-store' }, 5000);
     return res.ok;
   } catch {
     return false;
