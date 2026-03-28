@@ -4,7 +4,7 @@ import { fetchAnomalies, fetchIHI } from '@/lib/api';
 
 export const revalidate = 0;
 
-
+export default async function DashboardPage() {
   const BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
   // Wake up Render backend (free tier sleeps after inactivity)
   const wakeup = fetch(`${BASE}/ping`, { cache: 'no-store' }).catch(() => null);
