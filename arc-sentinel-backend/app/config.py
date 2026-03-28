@@ -1,0 +1,18 @@
+from pydantic_settings import BaseSettings, SettingsConfigDict
+from functools import lru_cache
+
+
+class Settings(BaseSettings):
+    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+
+    supabase_url: str
+    supabase_service_key: str
+    openai_api_key: str | None = None
+    cors_origins: str = "http://localhost:3000"
+    app_env: str = "development"
+
+
+@lru_cache()
+def get_settings() -> Settings:
+    # Pydantic fills values from .env; ignore static type checker complaining about missing args
+    return Settings()  # type: ignore[call-arg]
