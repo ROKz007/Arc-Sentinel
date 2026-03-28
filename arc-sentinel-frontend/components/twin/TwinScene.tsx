@@ -47,14 +47,46 @@ function Model({ anomalies }: { anomalies: Anomaly[] }) {
 export default function TwinScene({ anomalies }: TwinSceneProps) {
   return (
     <div className="h-64 w-full rounded overflow-hidden">
-      <Canvas camera={{ position: [0, 4, 8], fov: 50 }}>
-        <ambientLight intensity={0.8} />
-        <directionalLight position={[5, 10, 5]} intensity={0.8} />
-        <Suspense fallback={null}>
-          <Model anomalies={anomalies} />
-        </Suspense>
-        <OrbitControls enablePan={true} enableZoom={true} />
-      </Canvas>
+      <TwinSceneErrorBoundary>
+        <Canvas camera={{ position: [0, 4, 8], fov: 50 }}>
+          <ambientLight intensity={0.8} />
+          <directionalLight position={[5, 10, 5]} intensity={0.8} />
+          <Suspense fallback={<Fallback />}> 
+            <Model anomalies={anomalies} />
+          </Suspense>
+          <OrbitControls enablePan={true} enableZoom={true} />
+        </Canvas>
+      </TwinSceneErrorBoundary>
+    </div>
+  );
+}
+
+class TwinSceneErrorBoundary extends React.Component<{ children: React.ReactNode }, { hasError: boolean }> {
+  constructor(props: { children: React.ReactNode }) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error: any) {
+    console.warn("TwinScene render failed, showing placeholder", error);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return <Fallback />;
+    }
+    return this.props.children;
+  }
+}
+
+function Fallback() {
+  return (
+    <div className="h-64 w-full bg-slate-800 border border-slate-700 rounded flex items-center justify-center text-slate-400 text-sm">
+      3D model not available (bridge.glb missing)
     </div>
   );
 }
