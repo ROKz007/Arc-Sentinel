@@ -8,7 +8,9 @@ class Settings(BaseSettings):
     supabase_url: str
     supabase_service_key: str
     openai_api_key: str | None = None
-    cors_origins: str = "https://arc-sentinel-qjg5.onrender.com"
+    openai_model: str = "gpt-3.5-turbo"
+    openai_base_url: str | None = None  # optional override for Azure / proxy
+    cors_origins: str = "http://localhost:3000,https://arc-sentinel-web.vercel.app,https://arc-sentinel-qjg5.onrender.com"
     app_env: str = "development"
 
 

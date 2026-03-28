@@ -10,7 +10,7 @@ type TwinSceneProps = {
 };
 
 function Model({ anomalies }: { anomalies: Anomaly[] }) {
-  const gltf = useGLTF("/models/bridge.glb", true) as any;
+  const gltf = useGLTF("/model/bridge.glb", true) as any;
   const meshMap = useRef<Record<string, THREE.Mesh | null>>({});
 
   useEffect(() => {

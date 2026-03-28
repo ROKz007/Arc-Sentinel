@@ -6,11 +6,12 @@ from app.database import get_supabase
 from app.config import get_settings
 
 
-async def _call_openai(api_key: str, messages: List[dict], model: str = "gpt-3.5-turbo") -> str:
-    url = "https://api.openai.com/v1/chat/completions"
+async def _call_openai(api_key: str, messages: List[dict], model: str, base_url: str | None) -> str:
+    base = (base_url.rstrip("/")) if base_url else "https://api.openai.com/v1"
+    url = f"{base}/chat/completions"
     headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
     payload = {"model": model, "messages": messages, "temperature": 0.2, "max_tokens": 512}
-    async with httpx.AsyncClient(timeout=15.0) as client:
+    async with httpx.AsyncClient(timeout=20.0) as client:
         resp = await client.post(url, json=payload, headers=headers)
         resp.raise_for_status()
         data = resp.json()
@@ -38,13 +39,13 @@ async def argus_query(user_message: str) -> dict:
             {"role": "user", "content": f"Context:\n{context}\n\nUser question: {user_message}"},
         ]
         try:
-            # Prefer gpt-3.5-turbo as a broadly available model; caller can set OPENAI key for other models.
-            reply = await _call_openai(settings.openai_api_key, messages)
+            reply = await _call_openai(settings.openai_api_key, messages, settings.openai_model, settings.openai_base_url)
             sources = [s.split(":")[0].strip() for s in snippets]
             return {"reply": reply, "sources": sources}
-        except Exception:
-            # Log/ignore and fall back to stub below
+        except Exception as exc:
+            # Non-fatal: fall back to stub but include hint
             await asyncio.sleep(0)
+            snippets.append(f"LLM offline: {exc}")
 
     # Fallback lightweight reply when no API key or LLM call fails
     reply = "Argus online. "
