@@ -6,25 +6,33 @@ import { ArgusPanel } from "@/components/argus/ArgusPanel";
 import { DigitalTwinViewer } from "@/components/twin/DigitalTwinViewer";
 import { Anomaly } from "@/lib/types";
 
+const SAMPLE_ANOMALIES: Anomaly[] = [
+  {
+    id: 1,
+    created_at: new Date().toISOString(),
+    node_id: "pier_4",
+    sensor_log_id: 1,
+    severity: "yellow",
+    description: "Sample anomaly placeholder",
+    score: 1.0,
+    resolved: false,
+  },
+];
+
 async function getInitialAnomalies(): Promise<Anomaly[]> {
+  const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL;
+  const offline = !apiBase || apiBase.includes("xxxx");
+
+  if (offline) {
+    return SAMPLE_ANOMALIES;
+  }
+
   try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/anomalies?limit=10`, { cache: "no-store" });
+    const res = await fetch(`${apiBase}/anomalies?limit=10`, { cache: "no-store" });
     if (!res.ok) throw new Error("failed");
     return res.json();
   } catch {
-    // Fallback sample
-    return [
-      {
-        id: 1,
-        created_at: new Date().toISOString(),
-        node_id: "pier_4",
-        sensor_log_id: 1,
-        severity: "yellow",
-        description: "Sample anomaly placeholder",
-        score: 1.0,
-        resolved: false,
-      },
-    ];
+    return SAMPLE_ANOMALIES;
   }
 }
 
