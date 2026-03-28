@@ -30,6 +30,12 @@ app.include_router(health.router)
 app.include_router(argus.router)
 
 
+
 @app.get("/", tags=["health"])
 def root():
     return {"status": "ok", "service": "arc-sentinel"}
+
+# Fast health check for frontend wake-up
+@app.get("/ping", tags=["health"])
+def ping():
+    return {"status": "alive", "service": "arc-sentinel-backend"}

@@ -125,11 +125,37 @@ class TwinSceneErrorBoundary extends React.Component<{ children: React.ReactNode
   }
 }
 
+
+// Fallback geometry: simple bridge deck, piers, and cables
 function Fallback() {
   return (
-    <div className="h-64 w-full bg-slate-800 border border-slate-700 rounded flex items-center justify-center text-slate-400 text-sm">
-      3D model not available (bridge.glb missing)
-    </div>
+    <group>
+      {/* Bridge deck */}
+      <mesh position={[0, 0, 0]}>
+        <boxGeometry args={[10, 0.25, 2]} />
+        <meshStandardMaterial color={0x334155} roughness={0.8} />
+      </mesh>
+      {/* Left pier */}
+      <mesh position={[-3, -2, 0]}>
+        <cylinderGeometry args={[0.2, 0.3, 4, 8]} />
+        <meshStandardMaterial color={0x475569} roughness={0.9} />
+      </mesh>
+      {/* Right pier */}
+      <mesh position={[3, -2, 0]}>
+        <cylinderGeometry args={[0.2, 0.3, 4, 8]} />
+        <meshStandardMaterial color={0x475569} roughness={0.9} />
+      </mesh>
+      {/* Left cable */}
+      <mesh position={[-3, 1.5, 0]} rotation={[0, 0, Math.PI / 5]}>
+        <cylinderGeometry args={[0.04, 0.04, 5, 6]} />
+        <meshStandardMaterial color={0x94a3b8} />
+      </mesh>
+      {/* Right cable */}
+      <mesh position={[3, 1.5, 0]} rotation={[0, 0, -Math.PI / 5]}>
+        <cylinderGeometry args={[0.04, 0.04, 5, 6]} />
+        <meshStandardMaterial color={0x94a3b8} />
+      </mesh>
+    </group>
   );
 }
 

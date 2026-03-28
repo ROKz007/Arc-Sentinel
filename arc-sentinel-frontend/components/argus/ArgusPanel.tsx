@@ -5,9 +5,10 @@ import { sendArgusMessage } from "@/lib/api";
 import { ArgusInput } from "@/components/argus/ArgusInput";
 import { ArgusMessage } from "@/components/argus/ArgusMessage";
 
+
 const welcome: Message = {
   role: "assistant",
-  content: "Argus online. Ask about nodes, anomalies, or IHI.",
+  content: "> ARGUS AI ONLINE — Ask about sensor data, anomalies, or structural integrity",
 };
 
 export function ArgusPanel() {
@@ -21,8 +22,14 @@ export function ArgusPanel() {
       const botMsg: Message = { role: "assistant", content: response.reply, sources: response.sources };
       setMessages((prev) => [...prev, botMsg]);
     } catch (err) {
-      const botMsg: Message = { role: "assistant", content: "Argus is unavailable right now." };
-      setMessages((prev) => [...prev, botMsg]);
+      const isTimeout = err instanceof Error &&
+        (err.message.includes('timeout') || err.message.includes('fetch'));
+      setMessages((prev) => [...prev, {
+        role: 'assistant',
+        content: isTimeout
+          ? '⏳ Backend is waking up from sleep (Render free tier). Please wait 30 seconds and try again.'
+          : `⚠ Argus offline: ${err instanceof Error ? err.message : 'Unknown error'}. Check NEXT_PUBLIC_API_BASE_URL in Vercel env vars.`,
+      }]);
     }
   };
 

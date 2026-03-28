@@ -1,19 +1,24 @@
 import { HudTwinViewport } from "@/components/twin/HudTwinViewport";
+import { BackendStatus } from "@/components/dashboard/BackendStatus";
 import { fetchAnomalies, fetchIHI } from '@/lib/api';
 
 export const revalidate = 0;
 
-export default async function DashboardPage() {
-  // Fetch with fallbacks — never let a failed fetch crash the whole page
+
+  const BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
+  // Wake up Render backend (free tier sleeps after inactivity)
+  const wakeup = fetch(`${BASE}/ping`, { cache: 'no-store' }).catch(() => null);
+  await new Promise(resolve => setTimeout(resolve, 1000));
+
   const [ihiResult, anomaliesResult] = await Promise.allSettled([
     fetchIHI(),
     fetchAnomalies({ limit: 50 }),
   ]);
+  await wakeup;
 
   const ihi = ihiResult.status === 'fulfilled' ? ihiResult.value : { score: 0, breakdown: {} };
   const anomalies = anomaliesResult.status === 'fulfilled' ? anomaliesResult.value : [];
 
-  // Log failures clearly for debugging
   if (ihiResult.status === 'rejected') {
     // eslint-disable-next-line no-console
     console.error('[DashboardPage] IHI fetch failed:', ihiResult.reason);
@@ -23,9 +28,7 @@ export default async function DashboardPage() {
     console.error('[DashboardPage] Anomalies fetch failed:', anomaliesResult.reason);
   }
 
-  // Helper: count unresolved anomalies
   const unresolvedCount = anomalies.filter((a: any) => !a.resolved).length;
-  // Helper: build ticker string from anomalies
   const tickerText = anomalies.length
     ? anomalies.map((a: any) => `${a.node_id || 'NODE'}: ${a.type || 'ANOMALY'} @ ${a.created_at || ''}`).join(' // ')
     : 'No anomalies detected.';
@@ -63,6 +66,7 @@ export default async function DashboardPage() {
             <p className="text-secondary">UPLINK_ESTABLISHED</p>
             <p className="opacity-50">LATENCY: 12ms</p>
           </div>
+          <BackendStatus />
           <span className="material-symbols-outlined text-3xl cursor-pointer hover:text-secondary transition-all" aria-hidden>settings_input_antenna</span>
         </div>
       </header>
