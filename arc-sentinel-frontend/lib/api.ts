@@ -1,6 +1,6 @@
 import { Anomaly, IHIResponse, SensorLog } from "@/lib/types";
 
-const BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
+const BASE = process.env.NEXT_PUBLIC_API_BASE_URL || "https://arc-sentinel-qjg5.onrender.com";
 
 export async function fetchIHI(): Promise<IHIResponse> {
   const res = await fetch(`${BASE}/ihi`, { cache: "no-store" });

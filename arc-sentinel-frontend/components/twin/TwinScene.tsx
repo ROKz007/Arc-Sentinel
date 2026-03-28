@@ -45,6 +45,8 @@ function Model({ anomalies }: { anomalies: Anomaly[] }) {
 }
 
 export default function TwinScene({ anomalies }: TwinSceneProps) {
+  // Preload to avoid suspense fallback lingering if model is present
+  useGLTF.preload("/model/bridge.glb");
   return (
     <div className="h-64 w-full rounded overflow-hidden">
       <TwinSceneErrorBoundary>
