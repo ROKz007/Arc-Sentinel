@@ -10,7 +10,7 @@ class Settings(BaseSettings):
     openai_api_key: str | None = None
     openai_model: str = "gpt-3.5-turbo"
     openai_base_url: str | None = None  # optional override for Azure / proxy
-    cors_origins: str = "http://localhost:3000,https://arc-sentinel-web.vercel.app,https://arc-sentinel-qjg5.onrender.com"
+    cors_origins: str = "http://localhost:3000,http://127.0.0.1:3000,https://arc-sentinel-web.vercel.app,https://arc-sentinel-qjg5.onrender.com"
     app_env: str = "development"
 
 

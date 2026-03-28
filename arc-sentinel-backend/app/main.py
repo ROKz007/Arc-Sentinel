@@ -7,9 +7,20 @@ settings = get_settings()
 
 app = FastAPI(title="Arc-Sentinel API", version="0.1.0")
 
+base_defaults = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "https://arc-sentinel-web.vercel.app",
+    "https://arc-sentinel-qjg5.onrender.com",
+]
+origins = list({*base_defaults, *[o.strip() for o in settings.cors_origins.split(",") if o.strip()]})
+# Hackathon-friendly: if still empty, fall back to wildcard to unblock.
+if not origins:
+    origins = ["*"]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[o.strip() for o in settings.cors_origins.split(",")],
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

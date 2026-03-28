@@ -1,7 +1,7 @@
 "use client";
-import React, { Suspense, useEffect, useRef } from "react";
+import React, { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { Canvas } from "@react-three/fiber";
-import { OrbitControls, useGLTF } from "@react-three/drei";
+import { PresentationControls, Stage, useGLTF } from "@react-three/drei";
 import * as THREE from "three";
 import { Anomaly } from "@/lib/types";
 
@@ -9,8 +9,10 @@ type TwinSceneProps = {
   anomalies: Anomaly[];
 };
 
-function Model({ anomalies }: { anomalies: Anomaly[] }) {
-  const gltf = useGLTF("/model/bridge.glb", true) as any;
+type ModelProps = { anomalies: Anomaly[]; modelPath: string };
+
+function Model({ anomalies, modelPath }: ModelProps) {
+  const gltf = useGLTF(modelPath, true) as any;
   const meshMap = useRef<Record<string, THREE.Mesh | null>>({});
 
   useEffect(() => {
@@ -45,18 +47,56 @@ function Model({ anomalies }: { anomalies: Anomaly[] }) {
 }
 
 export default function TwinScene({ anomalies }: TwinSceneProps) {
-  // Preload to avoid suspense fallback lingering if model is present
-  useGLTF.preload("/model/bridge.glb");
+  const [modelPath, setModelPath] = useState<string | null>(null);
+  const [missing, setMissing] = useState(false);
+
+  // Probe for available model path (supports both /model and /models)
+  useEffect(() => {
+    let cancelled = false;
+    const paths = ["/model/bridge.glb", "/models/bridge.glb"];
+    (async () => {
+      for (const p of paths) {
+        try {
+          const res = await fetch(p, { method: "HEAD" });
+          if (cancelled) return;
+          if (res.ok) {
+            setModelPath(p);
+            useGLTF.preload(p);
+            return;
+          }
+        } catch (_) {
+          // try next
+        }
+      }
+      if (!cancelled) setMissing(true);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const content = useMemo(() => {
+    if (missing) return <Fallback />;
+    if (!modelPath) return <Loading />;
+    return (
+      <Suspense fallback={<Loading />}>
+        <PresentationControls speed={1.5} global zoom={0.5} polar={[-0.1, Math.PI / 4]}>
+          <Stage environment="city" intensity={0.5} adjustCamera>
+            <Model anomalies={anomalies} modelPath={modelPath} />
+          </Stage>
+        </PresentationControls>
+      </Suspense>
+    );
+  }, [anomalies, missing, modelPath]);
+
   return (
     <div className="h-64 w-full rounded overflow-hidden">
       <TwinSceneErrorBoundary>
-        <Canvas camera={{ position: [0, 4, 8], fov: 50 }}>
+        <Canvas dpr={[1, 2]} camera={{ fov: 45 }}>
+          <color attach="background" args={["#020617"]} />
           <ambientLight intensity={0.8} />
           <directionalLight position={[5, 10, 5]} intensity={0.8} />
-          <Suspense fallback={<Fallback />}> 
-            <Model anomalies={anomalies} />
-          </Suspense>
-          <OrbitControls enablePan={true} enableZoom={true} />
+          {content}
         </Canvas>
       </TwinSceneErrorBoundary>
     </div>
@@ -89,6 +129,14 @@ function Fallback() {
   return (
     <div className="h-64 w-full bg-slate-800 border border-slate-700 rounded flex items-center justify-center text-slate-400 text-sm">
       3D model not available (bridge.glb missing)
+    </div>
+  );
+}
+
+function Loading() {
+  return (
+    <div className="h-64 w-full bg-slate-900 border border-slate-800 rounded flex items-center justify-center text-slate-400 text-sm">
+      Loading bridge model...
     </div>
   );
 }

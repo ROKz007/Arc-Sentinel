@@ -3,8 +3,8 @@ import type { Metadata } from "next";
 import { ReactNode } from "react";
 
 export const metadata: Metadata = {
-  title: "Arc-Sentinel",
-  description: "Predictive Infrastructure Monitoring",
+  title: "Arc-Sentinel | Infrastructure Guardian",
+  description: "AI-powered structural health monitoring",
   icons: {
     icon: "/favicon.svg",
   },
