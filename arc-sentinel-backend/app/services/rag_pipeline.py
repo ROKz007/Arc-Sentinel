@@ -45,14 +45,19 @@ async def argus_query(user_message: str) -> dict:
         sources = list({a["node_id"] for a in anomalies.data}) if anomalies and anomalies.data else []  # type: ignore[index]
         return {"reply": reply, "sources": sources}
     except Exception as exc:  # pragma: no cover - external IO
-        snippets.append(f"LLM offline: {exc}")
         await asyncio.sleep(0)
-        return _stub_reply(user_message, snippets)
+        return _stub_reply(user_message, snippets, error=str(exc))
 
 
-def _stub_reply(user_message: str, snippets: list[str]) -> dict:
-    reply = "Argus online. "
+def _stub_reply(user_message: str, snippets: list[str], error: str | None = None) -> dict:
+    if error:
+        if "quota" in error or "429" in error:
+            reply = "Argus AI is currently unavailable — the OpenAI API quota has been exceeded. Please add billing to your OpenAI account to re-enable the AI assistant."
+        else:
+            reply = f"Argus AI is temporarily offline. Reason: {error[:120]}"
+    else:
+        reply = "Argus online (operating in fallback mode — no LLM key configured). "
     if snippets:
-        reply += "Recent issues: " + "; ".join(snippets) + ". "
-    reply += f"User asked: {user_message}"
-    return {"reply": reply, "sources": [s.split(":")[0].strip() for s in snippets]}
+        reply += " Recent anomaly context: " + "; ".join(snippets) + "."
+    node_sources = list({s.split(":")[0].strip().lstrip("[").split("]")[-1].strip() for s in snippets})
+    return {"reply": reply, "sources": node_sources}

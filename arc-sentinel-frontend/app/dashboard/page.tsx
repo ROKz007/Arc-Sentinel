@@ -1,5 +1,6 @@
 import { HudTwinViewport } from "@/components/twin/HudTwinViewport";
 import { BackendStatus } from "@/components/dashboard/BackendStatus";
+import { ArgusChat } from "@/components/dashboard/ArgusChat";
 import { fetchAnomalies, fetchIHI } from '@/lib/api';
 
 export const revalidate = 0;
@@ -173,23 +174,7 @@ export default async function DashboardPage() {
 
             <div className="md:col-span-2 glass backdrop-blur-xl cyber-clip p-5 border border-primary/10 hover:border-primary/40 transition-all group flex flex-col bg-obsidian/40 relative overflow-hidden">
               <div className="absolute inset-0 scanline opacity-5 pointer-events-none" />
-              <div className="flex justify-between items-start mb-4">
-                <div className="flex items-center gap-3">
-                  <span className="material-symbols-outlined text-primary" aria-hidden>psychology</span>
-                  <span className="font-headline text-[10px] tracking-[0.2em]">ARGUS_AI_INSIGHT</span>
-                </div>
-                <span className="font-mono text-[9px] px-3 py-1 border border-primary/30 text-primary uppercase">PREDICTIVE_ENGINE_V4.2</span>
-              </div>
-              <div className="flex-1 mb-6">
-                {/* TODO: Replace with real Argus AI response if available */}
-                <p className="font-mono text-[13px] leading-relaxed text-on-surface/80 cursor-blink inline">
-                  &gt; Argus AI: Connect and send a message to see live insights.
-                </p>
-              </div>
-              <div className="flex gap-4">
-                <button className="text-[10px] font-headline border border-primary/30 px-5 py-2 hover:bg-primary/10 transition-colors uppercase tracking-widest">View Simulation</button>
-                <button className="text-[10px] font-headline bg-primary/10 border border-primary/30 px-5 py-2 hover:bg-primary/20 transition-colors uppercase tracking-widest">Acknowledge</button>
-              </div>
+              <ArgusChat />
             </div>
           </div>
         </main>
